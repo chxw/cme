@@ -60,8 +60,6 @@ class Exchange:
 			divisions = self.cbot_divisions
 		elif self.name == "nymexComex":
 			divisions = self.nymexComex_divisions
-		else:
-			print("Error. You must name your Exchange instance the following: \" cme \", \" cbot \", \" nymexcomex \" ")
 
 		### Truncate
 		# 1. Get desired seat prices from HTML table cells and put inside prices_list

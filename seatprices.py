@@ -38,8 +38,9 @@ class Exchange:
 
 	def __init__(self, name):
 		self.name = name
+		self.data = []
 
-	def retrieve(self):
+	def scrape(self):
 		# Collect first membership pricing page
 		page = requests.get("https://www.cmegroup.com/company/membership/membership-and-lease-pricing.html#"+self.name)
 
@@ -50,9 +51,6 @@ class Exchange:
 		table_cells = soup.find(class_=self.name+" parsys")
 		seat_prices = table_cells.find_all(lambda tag:tag.name=="td" and "$" in tag.get_text())
 
-		return seat_prices
-
-	def clean(self, collected):
 		# Which exchange?
 		if self.name == "cme":
 			divisions = self.cme_divisions
@@ -62,42 +60,36 @@ class Exchange:
 			divisions = self.nymexComex_divisions
 
 		### Truncate
-		# 1. Get desired seat prices from HTML table cells and put inside prices_list
+		# 1. Get seat prices from HTML formatted table cells and insert into self.data
 		# 2. Index list to remove anything past seat prices table
 		# 3. Remove 3rd col: "Last Sale"
-		prices_list = []
 		i = 1
-		for table_cells in collected[0:divisions*3]:
+		for table_cells in seat_prices[0:divisions*3]:
 			if i % 3 != 0:
-				prices_list.append(table_cells.contents[0])
+				self.data.append(table_cells.contents[0])
 			i += 1
 
 		# Remove symbols '$,*'
-		prices_list = [re.sub("[$,*]", "", x) for x in prices_list]
+		self.data = [re.sub("[$,*]", "", x) for x in self.data]
 
 		# Convert str to int
-		prices_list = [int(x) for x in prices_list]
-
-		return prices_list
+		self.data = [int(x) for x in self.data]
 
 ######################################################################
 # Main
 ######################################################################
 
 CME = Exchange(name="cme")
-CME_collected = CME.retrieve()
-CME_prices = CME.clean(CME_collected)
+CME.scrape()
 
 CBOT = Exchange(name="cbot")
-CBOT_collected = CBOT.retrieve()
-CBOT_prices = CBOT.clean(CBOT_collected)
+CBOT.scrape()
 
-nymexComex = Exchange(name="nymexComex")
-NC_collected = nymexComex.retrieve()
-nymexComex_prices = nymexComex.clean(NC_collected)
+NC = Exchange(name="nymexComex")
+NC.scrape()
 
-# Create row to insert in google sheets
-row_to_insert = CME_prices+CBOT_prices+nymexComex_prices
+# # Create row to insert in google sheets
+row_to_insert = CME.data+CBOT.data+NC.data
 
 # Finish row_to_insert by adding timestamp
 ts = time.time()

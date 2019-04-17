@@ -41,8 +41,7 @@ class Exchange:
 
 	def retrieve(self):
 		# Collect first membership pricing page
-		url = "https://www.cmegroup.com/company/membership/membership-and-lease-pricing.html#"+self.name
-		page = requests.get(url)
+		page = requests.get("https://www.cmegroup.com/company/membership/membership-and-lease-pricing.html#"+self.name)
 
 		# Create a BeautifulSoup object
 		soup = BeautifulSoup(page.text, 'html.parser')

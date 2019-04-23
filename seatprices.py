@@ -7,30 +7,9 @@ import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-######################################################################
-# Functions
-######################################################################
-
-# Insert row to correct Google Sheets Drive
-def insert_to_gsheets(row):
-	# Use creds to create a client to interact with the Google Drive API
-	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-	creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-	client = gspread.authorize(creds)
-
-	# Open sheet
-	sheet = client.open("CME Seat Prices").sheet1
-
-	# Find next available (empty) row
-	str_list = list(filter(None, sheet.col_values(1)))
-	index = len(str_list)+1
-
-	# Insert our row into Google Sheets doc
-	sheet.insert_row(row, index)
-
-######################################################################
-# Classes
-######################################################################
+################################################
+## Classes 
+################################################
 class Exchange:
 	cme_divisions = 4 # cme, imm, iom, gem
 	cbot_divisions = 5 # full, am, gim, idem, com
@@ -59,10 +38,7 @@ class Exchange:
 		elif self.name == "nymexComex":
 			divisions = self.nymexComex_divisions
 
-		### Truncate
-		# 1. Get seat prices from HTML formatted table cells and insert into self.data
-		# 2. Index list to remove anything past seat prices table
-		# 3. Remove 3rd col: "Last Sale"
+		# Truncate - index list to remove anything past seat prices table + remove 3rd col: "Last Sale"
 		i = 1
 		for table_cells in seat_prices[0:divisions*3]:
 			if i % 3 != 0:
@@ -75,26 +51,49 @@ class Exchange:
 		# Convert str to int
 		self.data = [int(x) for x in self.data]
 
-######################################################################
-# Main
-######################################################################
+################################################
+## Functions
+################################################
+def insert_to_gsheets(*args):
+	# Join lists of data together
+	row = []
+	for data in args:
+		row = row+data
 
-CME = Exchange(name="cme")
-CME.scrape()
+	# Finish row by adding timestamp
+	ts = time.time()
+	st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+	row.insert(0, st)
 
-CBOT = Exchange(name="cbot")
-CBOT.scrape()
+	# Use creds to create a client to interact with the Google Drive API
+	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+	creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+	client = gspread.authorize(creds)
 
-NC = Exchange(name="nymexComex")
-NC.scrape()
+	# Open sheet
+	sheet = client.open("CME Seat Prices").sheet1
 
-# # Create row to insert in google sheets
-row_to_insert = CME.data+CBOT.data+NC.data
+	# Find next available (empty) row
+	str_list = list(filter(None, sheet.col_values(1)))
+	index = len(str_list)+1
 
-# Finish row_to_insert by adding timestamp
-ts = time.time()
-st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-row_to_insert.insert(0, st)
+	# Insert our row into Google Sheets doc
+	sheet.insert_row(row, index)
 
-# Insert row_to_insert to gsheet
-insert_to_gsheets(row_to_insert)
+################################################
+## Main
+################################################
+def main():
+	CME = Exchange(name="cme")
+	CME.scrape()
+
+	CBOT = Exchange(name="cbot")
+	CBOT.scrape()
+
+	NC = Exchange(name="nymexComex")
+	NC.scrape()
+
+	# Insert data to gsheets
+	insert_to_gsheets(CME.data, CBOT.data, NC.data)
+
+main()

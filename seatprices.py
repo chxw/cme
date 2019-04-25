@@ -11,32 +11,32 @@ from oauth2client.service_account import ServiceAccountCredentials
 ## Classes 
 ################################################
 class Exchange:
-	cme_divisions = 4 # cme, imm, iom, gem
-	cbot_divisions = 5 # full, am, gim, idem, com
-	nymexComex_divisions = 3 # nymex, comex full, comex options
+	CME_DIVISIONS = 4 # cme, imm, iom, gem
+	CBOT_DIVISIONS = 5 # full, am, gim, idem, com
+	NYMEXCOMEX_DIVISIONS = 3 # nymex, comex full, comex options
 
-	def __init__(self, name):
-		self.name = name
+	def __init__(self):
 		self.data = []
+		self.CME = "cme"
+		self.CBOT = "cbot"
+		self.NC = "nymexComex"
 
 	def scrape(self):
 		# Collect first membership pricing page
 		page = requests.get("https://www.cmegroup.com/company/membership/membership-and-lease-pricing.html#"+self.name)
 
-		# Create a BeautifulSoup object
-		soup = BeautifulSoup(page.text, 'html.parser')
-
 		# Locate table cells where seat prices are
+		soup = BeautifulSoup(page.text, 'html.parser')
 		table_cells = soup.find(class_=self.name+" parsys")
 		seat_prices = table_cells.find_all(lambda tag:tag.name=="td" and "$" in tag.get_text())
 
 		# Which exchange?
-		if self.name == "cme":
-			divisions = self.cme_divisions
-		elif self.name == "cbot":
-			divisions = self.cbot_divisions
-		elif self.name == "nymexComex":
-			divisions = self.nymexComex_divisions
+		if self.name == self.CME:
+			divisions = self.CME_DIVISIONS
+		elif self.name == self.CBOT:
+			divisions = self.CBOT_DIVISIONS
+		elif self.name == self.NC:
+			divisions = self.NYMEXCOMEX_DIVISIONS
 
 		# Truncate - index list to remove anything past seat prices table + remove 3rd col: "Last Sale"
 		i = 1
@@ -84,16 +84,20 @@ def insert_to_gsheets(*args):
 ## Main
 ################################################
 def main():
-	CME = Exchange(name="cme")
+	CME = Exchange().name
+	CME.name = CME.CME
 	CME.scrape()
 
-	CBOT = Exchange(name="cbot")
+	CBOT = Exchange()
+	CBOT.name = CBOT.CBOT
 	CBOT.scrape()
 
-	NC = Exchange(name="nymexComex")
+	NC = Exchange()
+	NC.name = NC.NC
 	NC.scrape()
 
 	# Insert data to gsheets
 	insert_to_gsheets(CME.data, CBOT.data, NC.data)
 
 main()
+

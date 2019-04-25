@@ -84,7 +84,7 @@ def insert_to_gsheets(*args):
 ## Main
 ################################################
 def main():
-	CME = Exchange().name
+	CME = Exchange()
 	CME.name = CME.CME
 	CME.scrape()
 

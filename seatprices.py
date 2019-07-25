@@ -77,8 +77,11 @@ def insert_to_gsheets(*args):
 	str_list = list(filter(None, sheet.col_values(1)))
 	index = len(str_list)+1
 
-	# Insert our row into Google Sheets doc
-	sheet.insert_row(row, index)
+	sheet.resize(index)
+	sheet.append_row(row)
+
+	# # Insert our row into Google Sheets doc
+	# sheet.insert_row(row, index+1)
 
 ################################################
 ## Main

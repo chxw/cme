@@ -81,26 +81,23 @@ def insert_to_gsheets(*args):
 	sheet.append_row(row)
 
 	# # Insert our row into Google Sheets doc
-	# sheet.insert_row(row, index+1)
+        # sheet.insert_row(row, index+1)
 
 ################################################
 ## Main
 ################################################
-def main():
-	CME = Exchange()
-	CME.name = CME.CME
-	CME.scrape()
 
-	CBOT = Exchange()
-	CBOT.name = CBOT.CBOT
-	CBOT.scrape()
+CME = Exchange()
+CME.name = CME.CME
+CME.scrape()
 
-	NC = Exchange()
-	NC.name = NC.NC
-	NC.scrape()
+CBOT = Exchange()
+CBOT.name = CBOT.CBOT
+CBOT.scrape()
 
-	# Insert data to gsheets
-	insert_to_gsheets(CME.data, CBOT.data, NC.data)
+NC = Exchange()
+NC.name = NC.NC
+NC.scrape()
 
-main()
-
+# Insert data to gsheets
+insert_to_gsheets(CME.data, CBOT.data, NC.data)
